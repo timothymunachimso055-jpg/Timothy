@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Midas Luxury - Premium Store</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#fff;overflow-x:hidden}
+header{background:#000;border-bottom:2px solid gold;padding:15px 20px;position:sticky;top:0;z-index:100}
+nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+nav h1{color:gold;font-size:24px}
+nav div{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+nav a{color:#fff;text-decoration:none;font-weight:500;cursor:pointer}
+nav a:hover{color:gold}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.hero{text-align:center;padding:60px 20px;background:linear-gradient(135deg,#000 0%,#1a1a1a 100%)}
+.hero h2{font-size:48px;color:gold;margin-bottom:20px}
+.hero p{font-size:18px;color:#ccc}
+.btn{background:gold;color:#000;padding:12px 30px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;font-size:16px}
+.btn:hover{background:#ffcc00}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;margin-top:30px}
+.product-card{background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:15px;transition:transform 0.3s}
+.product-card:hover{transform:translateY(-5px);border-color:gold}
+.product-card img{width:100%;height:200px;object-fit:cover;border-radius:5px}
+.product-card h3{margin:10px 0;color:gold}
+.product-card p{color:#ccc;margin-bottom:10px}
+.product-card button{width:100%;padding:10px;background:gold;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer}
+.cart-sidebar{position:fixed;right:-400px;top:0;width:400px;height:100%;background:#1a1a1a;border-left:2px solid gold;transition:right 0.3s;z-index:200;padding:20px;overflow-y:auto}
+.cart-sidebar.active{right:0}
+.cart-item{display:flex;gap:10px;margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid #333}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:300;justify-content:center;align-items:center}
+.modal.active{display:flex}
+.modal-content{background:#1a1a1a;padding:30px;border-radius:10px;border:2px solid gold;max-width:500px;width:90%}
+input,textarea,select{width:100%;padding:12px;margin-bottom:15px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:5px}
+input:focus,textarea:focus,select:focus{border-color:gold;outline:none}
+@media(max-width:768px){
+.hero h2{font-size:32px}
+.cart-sidebar{width:100%;right:-100%}
+nav h1{font-size:20px}
+</style>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+</head>
+<body>
+
+<header>
+<nav>
+<h1>👑 MIDAS LUXURY</h1>
+<div>
+  <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()" style="padding:8px;border-radius:5px;border:none;width:150px;background:#1a1a1a;color:#fff">
+  <a href="#" onclick="showHome()">Home</a>
+  <a href="#" onclick="showProducts()">Shop</a>
+  <a href="#" onclick="toggleCart()">Cart(<span id="cartCount">0</span>)</a>
+  <a href="#" onclick="showWishlist()">Wishlist(<span id="wishCount">0</span>)</a>
+  <a href="#" onclick="showMyOrders()">My Orders</a>
+  <a href="#" onclick="showCustomerCare()">Help</a>
+  <span id="authLinks"></span>
+</div>
+</nav>
+</header>
+
+<div class="container" id="homePage">
+<section class="hero">
+<h2>Luxury Redefined</h2>
+<p>Premium sneakers, bags, and accessories for the elite</p>
+<button class="btn" onclick="showProducts()">Shop Now</button>
+</section>
+
+<section>
+<h2 style="color:gold;text-align:center;margin:40px 0">Featured Products</h2>
+<div class="products-grid" id="featuredProducts"></div>
+</section>
+</div>
+
+<div class="container" id="productsPage" style="display:none">
+<h2 style="color:gold;margin-bottom:20px" id="productsTitle">All Products</h2>
+<div class="products-grid" id="productsGrid"></div>
+</div>
+
+<div class="cart-sidebar" id="cartSidebar">
+<h2 style="color:gold;margin-bottom:20px">Your Cart</h2>
+<div id="cartItems"></div>
+<div id="cartTotal" style="margin-top:20px;font-size:20px;color:gold"></div>
+<button class="btn" style="width:100%;margin-top:20px" onclick="checkout()">Checkout</button>
+<button class="btn" style="width:100%;margin-top:10px;background:#333;color:#fff" onclick="toggleCart()">Close</button>
+</div>
+
+<div class="modal" id="authModal">
+<div class="modal-content">
+<span onclick="closeAuth()" style="float:right;cursor:pointer;font-size:24px">&times;</span>
+<div id="authForm"></div>
+</div>
+</div>
+
+<div class="modal" id="adminModal">
+<div class="modal-content" style="max-width:800px;max-height:80vh;overflow-y:auto">
+<span onclick="closeAdmin()" style="float:right;cursor:pointer;font-size:24px">&times;</span>
+<h2 style="color:gold;margin-bottom:20px">Admin Panel - Orders</h2>
+<div id="adminOrders"></div>
+</div>
+</div>
+
+<script>
+let currentUser=JSON.parse(localStorage.getItem('currentUser'));
+let cart=JSON.parse(localStorage.getItem('cart')||'[]');
+let wishlist=JSON.parse(localStorage.getItem('wishlist')||'[]');
+let discount=0,shipping=1500;
+const coupons={MIDAS10:0.1,WELCOME5:0.05};
+const emailJSUserID='YOUR_EMAILJS_USER_ID';
+const emailJSServiceID='YOUR_SERVICE_ID';
+const emailJSTemplateID='YOUR_TEMPLATE_ID';
+
+const products=[
+{id:1,name:"Air Jordan 1 Retro",price:85000,img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",cat:"sneakers",stock:10,sizes:["40","41","42","43","44"],rating:0,reviews:[]},
+{id:2,name:"Nike Air Force 1",price:65000,img:"https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400",cat:"sneakers",stock:8,sizes:["40","41","42","43"],rating:0,reviews:[]},
+{id:3,name:"Luxury Leather Bag",price:120000,img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",cat:"bags",stock:5,sizes:["One Size"],rating:0,reviews:[]},
+{id:4,name:"Designer Sunglasses",price:35000,img:"https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",cat:"accessories",stock:15,sizes:["One Size"],rating:0,reviews:[]},
+{id:5,name:"Yeezy Boost 350",price:95000,img:"https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400",cat:"sneakers",stock:6,sizes:["40","41","42","43","44"],rating:0,reviews:[]},
+{id:6,name:"Gucci Belt",price:75000,img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",cat:"accessories",stock:12,sizes:["S","M","L"],rating:0,reviews:[]}
+];
+
+function updateAuthLinks(){
+const auth=document.getElementById('authLinks');
+if(currentUser){
+  auth.innerHTML=`<span style="color:gold">Hi, ${currentUser.name}</span> <a href="#" onclick="logout()">Logout</a> ${currentUser.email==='admin@midas.com'?'<a href="#" onclick="showAdmin()">Admin</a>':''}`;
+}else{
+  auth.innerHTML=`<a href="#" onclick="showLogin()">Login</a> <a href="#" onclick="showSignup()">Signup</a>`;
+}
+}
+
+function showLogin(){
+document.getElementById('authModal').classList.add('active');
+document.getElementById('authForm').innerHTML=`
+<h2 style="color:gold;margin-bottom:20px">Login</h2>
+<input type="email" id="loginEmail" placeholder="Email">
+<input type="password" id="loginPassword" placeholder="Password">
+<button class="btn" onclick="login()">Login</button>
+<p style="margin-top:15px">Don't have an account? <a href="#" onclick="showSignup()" style="color:gold">Signup</a></p>`;
+}
+
+function showSignup(){
+document.getElementById('authModal').classList.add('active');
+document.getElementById('authForm').innerHTML=`
+<h2 style="color:gold;margin-bottom:20px">Sign Up</h2>
+<input type="text" id="signupName" placeholder="Full Name">
+<input type="email" id="signupEmail" placeholder="Email">
+<input type="password" id="signupPassword" placeholder="Password">
+<button class="btn" onclick="signup()">Sign Up</button>
+<p style="margin-top:15px">Already have an account? <a href="#" onclick="showLogin()" style="color:gold">Login</a></p>`;
+}
+
+function signup(){
+const name=document.getElementById('signupName').value;
+const email=document.getElementById('signupEmail').value;
+const password=document.getElementById('signupPassword').value;
+if(!name||!email||!password){alert('Fill all fields');return}
+let users=JSON.parse(localStorage.getItem('users')||'[]');
+if(users.find(u=>u.email===email)){alert('Email already exists');return}
+users.push({name,email,password});
+localStorage.setItem('users',JSON.stringify(users));
+currentUser={name,email};
+localStorage.setItem('currentUser',JSON.stringify(currentUser));
+closeAuth();
+updateAuthLinks();
+alert('Account created successfully!');
+}
+
+function login(){
+const email=document.getElementById('loginEmail').value;
+const password=document.getElementById('loginPassword').value;
+let users=JSON.parse(localStorage.getItem('users')||'[]');
+const user=users.find(u=>u.email===email&&u.password===password);
+if(!user){alert('Invalid credentials');return}
+currentUser=user;
+localStorage.setItem('currentUser',JSON.stringify(currentUser));
+closeAuth();
+updateAuthLinks();
+alert('Login successful!');
+}
+
+function logout(){
+currentUser=null;
+localStorage.removeItem('currentUser');
+updateAuthLinks();
+showHome();
+}
+
+function closeAuth(){document.getElementById('authModal').classList.remove('active')}
+
+function displayProducts(list=products){
+const grid=document.getElementById('productsGrid');
+grid.innerHTML=list.map(p=>{
+const stars='★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating));
+return `
+<div class="product-card">
+  <img src="${p.img}" alt="${p.name}">
+  <h3>${p.name}</h3>
+  <p style="color:gold">₦${p.price.toLocaleString()}</p>
+  <p style="color:#ccc;font-size:14px">${stars} (${p.reviews.length})</p>
+  <p style="color:${p.stock>0?'lime':'red'};font-size:14px">${p.stock>0?p.stock+' in stock':'Out of Stock'}</p>
+  ${p.sizes?`<select id="size${p.id}" style="width:100%;margin-bottom:10px;padding:5px;border-radius:5px;background:#0a0a0a;color:#fff;border:1px solid #333">
+    ${p.sizes.map(s=>`<option>${s}</option>`).join('')}
+  </select>`:''}
+  <button onclick="addToCart(${p.id})" ${p.stock===0?'disabled style="background:#333;cursor:not-allowed"':''}>Add to Cart</button>
+  <button onclick="toggleWishlist(${p.id})" style="background:#333;margin-top:5px">♥ Wishlist</button>
+  <button onclick="addReview(${p.id})" style="background:#333;font-size:12px;margin-top:5px">Write Review</button>
+</div>
+`;
+}).join('');
+updateWishCount();
+}
+
+function addReview(id){
+if(!currentUser){alert('Login to review');showLogin();return}
+const rating=prompt('Rate 1-5 stars:');
+const text=prompt('Write your review:');
+if(rating&&text){
+const product=products.find(p=>p.id===id);
+product.reviews.push({user:currentUser.name,rating:parseInt(rating),text:text});
+product.rating=product.reviews.reduce((sum,r)=>sum+r.rating,0)/product.reviews.length;
+displayProducts();
+}}
+
+function toggleWishlist(id){
+const idx=wishlist.indexOf(id);
+if(idx>-1){wishlist.splice(idx,1)}else{wishlist.push(id)}
+localStorage.setItem('wishlist',JSON.stringify(wishlist));
+updateWishCount();
+alert(idx>-1?'Removed from wishlist':'Added to wishlist');
+}
+
+function updateWishCount(){document.getElementById('wishCount').textContent=wishlist.length}
+
+function showWishlist(){
+document.getElementById('homePage').style.display='none';
+document.getElementById('productsPage').style.display='block';
+const wishProducts=products.filter(p=>wishlist.includes(p.id));
+document.getElementById('productsTitle').textContent='My Wishlist';
+displayProducts(wishProducts);
+}
+
+function searchProducts(){
+const q=document.getElementById('searchInput').value.toLowerCase();
+const filtered=products.filter(p=>p.name.toLowerCase().includes(q));
+displayProducts(filtered);
+}
+
+function showHome(){
+document.getElementById('homePage').style.display='block';
+document.getElementById('productsPage').style.display='none';
+}
+
+function showProducts(){
+document.getElementById('homePage').style.display='none';
+document.getElementById('productsPage').style.display='block';
+document.getElementById('productsTitle').textContent='All Products';
+displayProducts();
+}
+
+function addToCart(id){
+if(!currentUser){alert('Please login to add items to cart');showLogin();return}
+const product=products.find(p=>p.id===id);
+if(product.stock===0){alert('Out of stock');return}
+const size=document.getElementById('size'+id)?document.getElementById('size'+id).value:'One Size';
+const existing=cart.find(item=>item.id===id&&item.size===size);
+if(existing){existing.qty++}else{cart.push({...product,qty:1,size:size})}
+product.stock--;
+localStorage.setItem('cart',JSON.stringify(cart));
+updateCart();
+alert(`${product.name} - Size ${size} added to cart`);
+}
+
+function updateCart(){
+document.getElementById('cartCount').textContent=cart.reduce((sum,item)=>sum+item.qty,0);
+const cartItems=document.getElementById('cartItems');
+if(cart.length===0){
+  cartItems.innerHTML='<p>Cart is empty</p>';
+  document.getElementById('cartTotal').textContent='';
+  return;
+}
+cartItems.innerHTML=cart.map((item,index)=>`
+  <div class="cart-item">
+    <img src="${item.img}" style="width:60px;height:60px;object-fit:cover;border-radius:5px">
+    <div style="flex:1">
+      <h4>${item.name}</h4>
+      <p>Size: ${item.size}</p>
+      <p>₦${item.price.toLocaleString()} x ${item.qty}</p>
+      <button onclick="removeFromCart(${index})" style="background:red;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer">Remove</button>
+    </div>
+  </div>
+`).join('');
+const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+const total=Math.round((subtotal*(1-discount))+shipping);
+document.getElementById('cartTotal').textContent=`Total: ₦${total.toLocaleString()}`;
+}
+
+function removeFromCart(index){
+const item=cart[index];
+const product=products.find(p=>p.id===item.id);
+product.stock+=item.qty;
+cart.splice(index,1);
+localStorage.setItem('cart',JSON.stringify(cart));
+updateCart();
+}
+
+function toggleCart(){document.getElementById('cartSidebar').classList.toggle('active')}
+
+function checkout(){
+if(!currentUser){alert('Please login to checkout');showLogin();return}
+if(cart.length===0){alert('Cart is empty');return}
+toggleCart();
+showCheckoutForm();
+}
+
+function showCheckoutForm(){
+document.getElementById('authModal').classList.add('active');
+const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+const total=Math.round((subtotal*(1-discount))+shipping);
+document.getElementById('authForm').innerHTML=`
+<h2 style="color:gold;margin-bottom:20px">Checkout</h2>
+<input type="text" id="checkoutName" value="${currentUser.name}" placeholder="Full Name">
+<input type="email" id="checkoutEmail" value="${currentUser.email}" placeholder="Email">
+<input type="text" id="checkoutAddress" placeholder="Delivery Address">
+<select id="checkoutState" onchange="updateShipping()" style="width:100%;padding:10px;margin-bottom:10px;border-radius:5px;background:#0a0a0a;color:#fff;border:1px solid #333">
+  <option value="1500">Lagos - ₦1500</option>
+  <option value="3000">Outside Lagos - ₦3000</option>
+</select>
+<input type="text" id="couponCode" placeholder="Coupon Code" style="width:70%;padding:10px;border-radius:5px;background:#0a0a0a;color:#fff;border:1px solid #333">
+<button onclick="applyCoupon()" style="width:28%;padding:10px;background:gold;color:#000;border:none;border-radius:5px">Apply</button>
+<p id="couponMsg" style="color:lime;font-size:14px"></p>
+<p style="color:gold;margin:15px 0">Total: ₦${total.toLocaleString()}</p>
+<p style="color:gold;margin:15px 0">Choose Payment Method:</p>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:15px">
+  <button onclick="payWithPaystack()" style="background:#003399;color:#fff;padding:10px;border:none;border-radius:5px">Paystack</button>
+  <button onclick="payWithFlutterwave()" style="background:#f5a623;color:#000;padding:10px;border:none;border-radius:5px">Flutterwave</button>
+  <button onclick="payWithOpay()" style="background:#00c853;color:#fff;padding:10px;border:none;border-radius:5px">OPay</button>
+</div>`;
+}
+
+function updateShipping(){shipping=parseInt(document.getElementById('checkoutState').value);showCheckoutForm()}
+
+function applyCoupon(){
+const code=document.getElementById('couponCode').value.toUpperCase();
+if(coupons[code]){discount=coupons[code];document.getElementById('couponMsg').textContent=`Coupon applied: ${discount*100}% off`}
+else{document.getElementById('couponMsg').textContent='Invalid coupon';discount=0}
+showCheckoutForm();
+}
+
+function payWithPaystack(){
+const name=document.getElementById('checkoutName').value;
+const email=document.getElementById('checkoutEmail').value;
+const address=document.getElementById('checkoutAddress').value;
+if(!name||!email||!address){alert('Fill all fields');return}
+const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+const total=Math.round((subtotal*(1-discount))+shipping);
+const handler=PaystackPop.setup({
+  key:'pk_test_YOUR_PAYSTACK_KEY',
+  email:email,
+  amount:total*100,
+  currency:'NGN',
+  ref:''+Math.floor((Math.random()*1000000)+1),
+  callback:function(response){saveOrder(name,email,address,total,response.reference,'Paystack')},
+  onClose:function(){alert('Payment cancelled')}
+});
+handler.openIframe();
+}
+
+function payWithFlutterwave(){
+const name=document.getElementById('checkoutName').value;
+const email=document.getElementById('checkoutEmail').value;
+const address=document.getElementById('checkoutAddress').value;
+if(!name||!email||!address){alert('Fill all fields');return}
+const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+const total=Math.round((subtotal*(1-discount))+shipping);
+FlutterwaveCheckout({
+  public_key:'FLWPUBK_TEST-YOUR_FLUTTERWAVE_KEY',
+  tx_ref:''+Math.floor((Math.random()*1000000)+1),
+  amount:total,
+  currency:'NGN',
+  customer:{email:email,name:name},
+  callback:function(data){saveOrder(name,email,address,total,data.tx_ref,'Flutterwave')},
+  onclose:function(){alert('Payment cancelled')},
+  customizations:{title:'Midas Luxury',description:'Order Payment'}
+});
+}
+
+function payWithOpay(){
+const name=document.getElementById('checkoutName').value;
+const email=document.getElementById('checkoutEmail').value;
+const address=document.getElementById('checkoutAddress').value;
+if(!name||!email||!address){alert('Fill all fields');return}
+const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+const total=Math.round((subtotal*(1-discount))+shipping);
+const ref='OPAY'+Math.floor((Math.random()*1000000)+1);
+const msg=`Pay ₦${total.toLocaleString()} to:\n\nAccount Name: Nwachukwu Wisdom Chimeremeze\nAccount Number: 9018653469\nBank: OPay\nReference: ${ref}\n\nAfter payment, click OK to confirm.`;
+alert(msg);
+if(confirm('Have you completed the OPay transfer?')){saveOrder(name,email,address,total,ref,'OPay')}
+}
+
+function saveOrder(name,email,address,total,ref,method){
+const order={
+  user:currentUser?currentUser.email:null,
+  name:name,
+  email:email,
+  address:address,
+  items:cart,
+  total:total,
+  ref:ref,
+  method:method,
+  paid:method==='OPay'?false:true,
+  date:new Date().toLocaleString()
+};
+let orders=JSON.parse(localStorage.getItem('orders')||'[]');
+orders.push(order);
+localStorage.setItem('orders',JSON.stringify(orders));
+cart=[];
+localStorage.setItem('cart',JSON.stringify(cart));
+updateCart();
+closeAuth();
+alert(`Order placed!\nMethod: ${method}\nRef: ${ref}\nTotal: ₦${total.toLocaleString()}`);
+if(emailJSUserID!=='YOUR_EMAILJS_USER_ID'){
+  emailjs.init(emailJSUserID);
+  emailjs.send(emailJSServiceID,emailJSTemplateID,{
+    to_email:'your-email@gmail.com',
+    customer_name:name,
+    total:total,
+    ref:ref,
+    method:method
+  });
+}
+}
+
+function showMyOrders(){
+if(!currentUser){alert('Login to see your orders');showLogin();return}
+const userOrders=JSON.parse(localStorage.getItem('orders')||'[]').filter(o=>o.user===currentUser.email);
+document.getElementById('homePage').style.display='none';
+document.getElementById('productsPage').style.display='block';
+document.getElementById('productsTitle').textContent='My Orders';
+document.getElementById('productsGrid').innerHTML=userOrders.length?userOrders.reverse().map((o,i)=>`
+  <div style="background:#1a1a1a;border:1px solid gold;border-radius:10px;padding:15px;margin-bottom:15px">
+    <p><strong>Order #${userOrders.length-i}</strong> - ${o.date}</p>
+    <p><strong>Total:</strong> ₦${o.total.toLocaleString()}</p>
+    <p><strong>Method:</strong> ${o.method} | <strong>Ref:</strong> ${o.ref}</p>
+    <p><strong>Status:</strong> ${o.paid?'<span style="color:lime">Paid</span>':'<span style="color:orange">Unpaid</span>'}</p>
+  </div>
+`).join(''):'<p>No orders yet</p>';
+}
+
+function showCustomerCare(){
+document.getElementById('authModal').classList.add('active');
+document.getElementById('authForm').innerHTML=`
+<h2 style="color:gold;margin-bottom:20px">Customer Care</h2>
+<input type="text" id="careName" placeholder="Your Name">
+<input type="email" id="careEmail" placeholder="Your Email">
+<textarea id="careMessage" placeholder="How can we help you?" rows="5"></textarea>
+<button class="btn" onclick="submitCare()">Send Message</button>`;
+}
+
+function submitCare(){
+const name=document.getElementById('careName').value;
+const email=document.getElementById('careEmail').value;
+const message=document.getElementById('careMessage').value;
+if(!name||!email||!message){alert('Fill all fields');return}
+let messages=JSON.parse(localStorage.getItem('careMessages')||'[]');
+messages.push({name,email,message,date:new Date().toLocaleString()});
+localStorage.setItem('careMessages',JSON.stringify(messages));
+closeAuth();
+alert('Message sent! We will get back to you soon.');
+}
+
+function showAdmin(){
+if(!currentUser||currentUser.email!=='admin@midas.com'){alert('Admin access only');return}
+document.getElementById('adminModal').classList.add('active');
+displayOrders();
+}
+
+function closeAdmin(){document.getElementById('adminModal').classList.remove('active')}
+
+function displayOrders(){
+const orders=JSON.parse(localStorage.getItem('orders')||'[]');
+const list=document.getElementById('adminOrders');
+if(orders.length===0){list.innerHTML='<p>No orders yet</p>';return}
+list.innerHTML=orders.reverse().map((order,index)=>{
+const realIndex=orders.length-1-index;
+return `
+  <div style="background:#1a1a1a;border:1px solid gold;border-radius:10px;padding:15px;margin-bottom:15px">
+    <p><strong>Order #${orders.length-index}</strong> - ${order.date}</p>
+    <p><strong>Name:</strong> ${order.name}</p>
+    <p><strong>Email:</strong> ${order.email}</p>
+    <p><strong>Address:</strong> ${order.address}</p>
+    <p><strong>Items:</strong></p>
+    <ul style="margin-left:20px">
+      ${order.items.map(item=>`<li>${item.name} - Size ${item.size} x${item.qty} - ₦${(item.price*item.qty).toLocaleString()}</li>`).join('')}
+    </ul>
+    <p><strong>Total:</strong> ₦${order.total.toLocaleString()}</p>
+    <p><strong>Method:</strong> ${order.method} | <strong>Ref:</strong> ${order.ref}</p>
+    <p><strong>Status:</strong> ${order.paid?'<span style="color:lime">Paid</span>':'<span style="color:orange">Unpaid</span>'}</p>
+    ${order.method==='OPay'&&!order.paid?`<button onclick="markPaid(${realIndex})" style="background:lime;color:#000;padding:8px 15px;border:none;border-radius:5px;margin-top:10px;cursor:pointer">Mark as Paid</button>`:''}
+  </div>
+`;
+}).join('');
+}
+
+function markPaid(index){
+const orders=JSON.parse(localStorage.getItem('orders')||'[]');
+orders[index].paid=true;
+localStorage.setItem('orders',JSON.stringify(orders));
+alert('Order marked as paid');
+displayOrders();
+}
+
+updateAuthLinks();
+updateCart();
+updateWishCount();
+displayProducts(products.slice(0,4));
+</script>
+</body>
+</html>
