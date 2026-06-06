@@ -112,6 +112,13 @@ const emailJSUserID='YOUR_EMAILJS_USER_ID';
 const emailJSServiceID='YOUR_SERVICE_ID';
 const emailJSTemplateID='YOUR_TEMPLATE_ID';
 
+// Auto-create admin account if it doesn't exist
+let users=JSON.parse(localStorage.getItem('users')||'[]');
+if(!users.find(u=>u.email==='admin@midas.com')){
+  users.push({name:'Admin',email:'admin@midas.com',password:'admin123'});
+  localStorage.setItem('users',JSON.stringify(users));
+}
+
 const products=[
 {id:1,name:"Air Jordan 1 Retro",price:85000,img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",cat:"sneakers",stock:10,sizes:["40","41","42","43","44"],rating:0,reviews:[]},
 {id:2,name:"Nike Air Force 1",price:65000,img:"https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400",cat:"sneakers",stock:8,sizes:["40","41","42","43"],rating:0,reviews:[]},
@@ -508,9 +515,31 @@ const orders=JSON.parse(localStorage.getItem('orders')||'[]');
 orders[index].paid=true;
 localStorage.setItem('orders',JSON.stringify(orders));
 alert('Order marked as paid');
-displayOrders();
+
+// Send WhatsApp notification for OPay orders
+const order = orders[index];
+if(order.method === 'OPay'){
+  const instanceId = 'instance179545';
+  const token = 'ochdbxd810zd1omy';
+  const yourNumber = '2349018653469'; // CHANGE THIS to your WhatsApp number in 234 format
+
+  const itemsText = order.items.map(item=>`${item.name} - Size ${item.size} x${item.qty}`).join('\n');
+  const message = `✅ PAYMENT CONFIRMED - MIDAS LUXURY\nName: ${order.name}\nRef: ${order.ref}\nTotal: ₦${order.total.toLocaleString()}\n\nItems:\n${itemsText}\n\nStatus: PAID\nYou can now deliver this order.`;
+
+  fetch(`https://api.ultramsg.com/${instanceId}/messages/chat`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      token: token,
+      to: yourNumber,
+      body: message
+    })
+  }).then(r=>console.log('WhatsApp sent'))
+ .catch(e=>console.log('WhatsApp error',e));
 }
 
+displayOrders();
+}
 updateAuthLinks();
 updateCart();
 updateWishCount();
