@@ -310,29 +310,31 @@ updateAuthLinks();
 showHome();
 }
 
-function closeAuth(){document.getElementById('authModal').classList.remove('active')}
-
 function displayProducts(list=products){
-const grid=document.getElementById('productsGrid');
-grid.innerHTML=list.map(p=>{
-const stars='★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating));
-return `
-<div class="product-card">
-  <img src="${p.img}" alt="${p.name}">
-  <h3>${p.name}</h3>
-  <p style="color:gold">₦${p.price.toLocaleString()}</p>
-  <p style="color:#ccc;font-size:14px">${stars} (${p.reviews.length})</p>
-  <p style="color:${p.stock>0?'lime':'red'};font-size:14px">${p.stock>0?p.stock+' in stock':'Out of Stock'}</p>
-  ${p.sizes?`<select id="size${p.id}" style="width:100%;margin-bottom:10px;padding:5px;border-radius:5px;background:#0a0a0a;color:#fff;border:1px solid #333">
-    ${p.sizes.map(s=>`<option>${s}</option>`).join('')}
-  </select>`:''}
-  <button onclick="addToCart(${p.id})" ${p.stock===0?'disabled style="background:#333;cursor:not-allowed"':''}>Add to Cart</button>
-  <button onclick="toggleWishlist(${p.id})" style="background:#333;margin-top:5px">♥ Wishlist</button>
-  <button onclick="addReview(${p.id})" style="background:#333;font-size:12px;margin-top:5px">Write Review</button>
-</div>
-`;
-}).join('');
-updateWishCount();
+  const grid=document.getElementById('products');
+  grid.innerHTML=list.map(p=>{
+    let basePrice = p.basePrice || p.price;
+    let img = p.image || p.img;
+
+    let variantHTML = '';
+    if(p.variants){
+      variantHTML = `<select id="variant${p.id}" onchange="updatePrice(${p.id})" style="margin:5px 0;width:100%;padding:5px">`;
+      p.variants.forEach((v,i)=>{
+        let label = v.size || v.color || v.storage || 'Default';
+        variantHTML += `<option value="${i}">${label} - N${v.price.toLocaleString()}</option>`;
+      });
+      variantHTML += `</select>`;
+    }
+
+    return `
+    <div class="product-card">
+      <img src="${img}" alt="${p.name}">
+      <h3>${p.name}</h3>
+      <p id="price${p.id}" style="color:gold">N${basePrice.toLocaleString()}</p>
+      ${variantHTML}
+      <button onclick="addToCart(${p.id})" style="background:lime;color:black;border:none;padding:8px;width:100%;margin-top:5px">Add to Cart</button>
+    </div>`;
+  }).join('');
 }
 
 function addReview(id){
@@ -364,6 +366,12 @@ document.getElementById('productsTitle').textContent='My Wishlist';
 displayProducts(wishProducts);
 }
 
+function updatePrice(productId){
+  let p = products.find(x=>x.id===productId);
+  let idx = document.getElementById(`variant${productId}`).value;
+  let price = p.variants[idx].price;
+  document.getElementById(`price${productId}`).innerText = `N${price.toLocaleString()}`;
+} 
 function searchProducts(){
 const q=document.getElementById('searchInput').value.toLowerCase();
 const filtered=products.filter(p=>p.name.toLowerCase().includes(q));
@@ -383,40 +391,61 @@ displayProducts();
 }
 
 function addToCart(id){
-if(!currentUser){alert('Please login to add items to cart');showLogin();return}
-const product=products.find(p=>p.id===id);
-if(product.stock===0){alert('Out of stock');return}
-const size=document.getElementById('size'+id)?document.getElementById('size'+id).value:'One Size';
-const existing=cart.find(item=>item.id===id&&item.size===size);
-if(existing){existing.qty++}else{cart.push({...product,qty:1,size:size})}
-product.stock--;
-localStorage.setItem('cart',JSON.stringify(cart));
-updateCart();
-alert(`${product.name} - Size ${size} added to cart`);
+  if(!currentUser){alert('Please login to add to cart'); return;}
+  const product=products.find(p=>p.id===id);
+  if(product.stock===0){alert('Out of stock'); return;}
+
+  let price = product.basePrice || product.price;
+  let variantLabel = '';
+
+  if(product.variants){
+    const idx = document.getElementById(`variant${id}`).value;
+    price = product.variants[idx].price;
+    variantLabel = product.variants[idx].size || product.variants[idx].color || product.variants[idx].storage || '';
+  }
+
+  const existing=cart.find(item=>item.id===id && item.variant===variantLabel);
+  if(existing){existing.qty++}else{
+    cart.push({
+      id:id,
+      name:product.name,
+      price:price,
+      image:product.image || product.img,
+      variant:variantLabel,
+      qty:1
+    })
+  }
+
+  localStorage.setItem('cart',JSON.stringify(cart));
+  updateCart();
+  alert(`${product.name} ${variantLabel?'- '+variantLabel:''} added to cart`);
 }
 
 function updateCart(){
-document.getElementById('cartCount').textContent=cart.reduce((sum,item)=>sum+item.qty,0);
-const cartItems=document.getElementById('cartItems');
-if(cart.length===0){
-  cartItems.innerHTML='<p>Cart is empty</p>';
-  document.getElementById('cartTotal').textContent='';
-  return;
-}
-cartItems.innerHTML=cart.map((item,index)=>`
-  <div class="cart-item">
-    <img src="${item.img}" style="width:60px;height:60px;object-fit:cover;border-radius:5px">
-    <div style="flex:1">
-      <h4>${item.name}</h4>
-      <p>Size: ${item.size}</p>
-      <p>₦${item.price.toLocaleString()} x ${item.qty}</p>
-      <button onclick="removeFromCart(${index})" style="background:red;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer">Remove</button>
+  document.getElementById('cartCount').textContent = cart.reduce((sum,item)=>sum+item.qty,0);
+  const cartItems=document.getElementById('cartItems');
+
+  if(cart.length===0){
+    cartItems.innerHTML='<p>Cart is empty</p>';
+    document.getElementById('cartTotal').textContent='N0';
+    return;
+  }
+
+  cartItems.innerHTML=cart.map((item,index)=>`
+    <div class="cart-item">
+      <img src="${item.image}" style="width:60px;height:60px;object-fit:cover;border-radius:5px">
+      <div style="flex:1">
+        <h4>${item.name}</h4>
+        ${item.variant?`<p style="font-size:12px;color:#ccc">${item.variant}</p>`:''}
+        <p>N${item.price.toLocaleString()} x ${item.qty}</p>
+        <button onclick="removeFromCart(${index})" style="background:red;color:white;border:none;padding:3px 8px;font-size:12px">Remove</button>
+      </div>
     </div>
-  </div>
-`).join('');
-const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-const total=Math.round((subtotal*(1-discount))+shipping);
-document.getElementById('cartTotal').textContent=`Total: ₦${total.toLocaleString()}`;
+  `).join('');
+
+  const subtotal=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+  const total=Math.round(subtotal*(1-discount)+shipping);
+  document.getElementById('cartTotal').textContent=`N${total.toLocaleString()}`;
 }
 
 function removeFromCart(index){
