@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+hi<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -119,14 +119,130 @@ if(!users.find(u=>u.email==='admin@midas.com')){
   localStorage.setItem('users',JSON.stringify(users));
 }
 
-const products=[
-{id:1,name:"Air Jordan 1 Retro",price:85000,img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",cat:"sneakers",stock:10,sizes:["40","41","42","43","44"],rating:0,reviews:[]},
-{id:2,name:"Nike Air Force 1",price:65000,img:"https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400",cat:"sneakers",stock:8,sizes:["40","41","42","43"],rating:0,reviews:[]},
-{id:3,name:"Luxury Leather Bag",price:120000,img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",cat:"bags",stock:5,sizes:["One Size"],rating:0,reviews:[]},
-{id:4,name:"Designer Sunglasses",price:35000,img:"https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",cat:"accessories",stock:15,sizes:["One Size"],rating:0,reviews:[]},
-{id:5,name:"Yeezy Boost 350",price:95000,img:"https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400",cat:"sneakers",stock:6,sizes:["40","41","42","43","44"],rating:0,reviews:[]},
-{id:6,name:"Gucci Belt",price:75000,img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",cat:"accessories",stock:12,sizes:["S","M","L"],rating:0,reviews:[]}
-];
+const products = [
+  // Watches
+  {id: 101, name: 'G-Shock GA-2100 Watch', price: 45000, image: 'https://i.dummyjson.com/data/products/30/thumbnail.jpg', category: 'Watches'},
+  {id: 114, name: 'Casio Digital Watch', price: 8000, image: 'https://i.dummyjson.com/data/products/64/thumbnail.jpg', category: 'Watches'},
+  {id: 115, name: 'Smart Watch Series 9', price: 25000, image: 'https://i.dummyjson.com/data/products/65/thumbnail.jpg', category: 'Watches'},
+  {id: 116, name: 'Rolex Style Luxury Watch', price: 35000, image: 'https://i.dummyjson.com/data/products/66/thumbnail.jpg', category: 'Watches'},
+  {id: 117, name: 'Apple Watch Ultra Clone', price: 18000, image: 'https://i.dummyjson.com/data/products/67/thumbnail.jpg', category: 'Watches'},
+
+  // Streetwear with sizes
+  {id: 102, name: 'Premium Oversized Hoodie', basePrice: 12000, image: 'https://i.dummyjson.com/data/products/50/thumbnail.jpg', category: 'Streetwear',
+    variants: [
+      {size: 'M', price: 12000}, {size: 'L', price: 12000}, {size: 'XL', price: 13000}, {size: 'XXL', price: 13000}
+    ]},
+  {id: 103, name: 'Joggers Track Pants', basePrice: 10000, image: 'https://i.dummyjson.com/data/products/51/thumbnail.jpg', category: 'Streetwear',
+    variants: [
+      {size: 'S', price: 10000}, {size: 'M', price: 10000}, {size: 'L', price: 10000}, {size: 'XL', price: 11000}
+    ]},
+
+  // Nigerian Wear with sizes
+  {id: 104, name: 'Ankara Print Dress - Female', basePrice: 18000, image: 'https://i.dummyjson.com/data/products/52/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: '8', price: 18000}, {size: '10', price: 18000}, {size: '12', price: 19000}, {size: '14', price: 19000}
+    ]},
+  {id: 105, name: 'Agbada 3-Piece Set - Male', basePrice: 60000, image: 'https://i.dummyjson.com/data/products/53/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: 'M', price: 60000}, {size: 'L', price: 60000}, {size: 'XL', price: 62000}, {size: 'XXL', price: 62000}
+    ]},
+  {id: 106, name: 'Buba & Sokoto Set - Male', basePrice: 25000, image: 'https://i.dummyjson.com/data/products/54/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: 'M', price: 25000}, {size: 'L', price: 25000}, {size: 'XL', price: 26000}
+    ]},
+  {id: 107, name: 'Iro & Buba with Gele - Female', basePrice: 35000, image: 'https://i.dummyjson.com/data/products/55/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: '10', price: 35000}, {size: '12', price: 35000}, {size: '14', price: 36000}
+    ]},
+  {id: 108, name: 'Lace Senator Wear - Male', basePrice: 40000, image: 'https://i.dummyjson.com/data/products/56/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: 'M', price: 40000}, {size: 'L', price: 40000}, {size: 'XL', price: 42000}
+    ]},
+  {id: 109, name: 'Lace Asoebi Gown - Female', basePrice: 32000, image: 'https://i.dummyjson.com/data/products/57/thumbnail.jpg', category: 'Nigerian Wear',
+    variants: [
+      {size: '10', price: 32000}, {size: '12', price: 32000}, {size: '14', price: 33000}
+    ]},
+
+  // Football Jerseys with sizes
+  {id: 110, name: 'Nigeria Super Eagles Jersey 2024', basePrice: 12000, image: 'https://i.dummyjson.com/data/products/59/thumbnail.jpg', category: 'Football Jerseys',
+    variants: [
+      {size: 'S', price: 12000}, {size: 'M', price: 12000}, {size: 'L', price: 12000}, {size: 'XL', price: 13000}
+    ]},
+  {id: 111, name: 'Man City Home Jersey', basePrice: 14000, image: 'https://i.dummyjson.com/data/products/60/thumbnail.jpg', category: 'Football Jerseys',
+    variants: [
+      {size: 'S', price: 14000}, {size: 'M', price: 14000}, {size: 'L', price: 14000}, {size: 'XL', price: 15000}
+    ]},
+  {id: 112, name: 'Real Madrid Away Jersey', basePrice: 14000, image: 'https://i.dummyjson.com/data/products/61/thumbnail.jpg', category: 'Football Jerseys',
+    variants: [
+      {size: 'S', price: 14000}, {size: 'M', price: 14000}, {size: 'L', price: 14000}, {size: 'XL', price: 15000}
+    ]},
+  {id: 113, name: 'Barcelona Messi Jersey', basePrice: 15000, image: 'https://i.dummyjson.com/data/products/62/thumbnail.jpg', category: 'Football Jerseys',
+    variants: [
+      {size: 'S', price: 15000}, {size: 'M', price: 15000}, {size: 'L', price: 15000}, {size: 'XL', price: 16000}
+    ]},
+
+  // Gold Chains
+  {id: 118, name: 'Gold Cuban Link Chain - Men', price: 55000, image: 'https://i.dummyjson.com/data/products/68/thumbnail.jpg', category: 'Jewelry'},
+  {id: 119, name: 'Gold Rope Chain - Women', price: 42000, image: 'https://i.dummyjson.com/data/products/69/thumbnail.jpg', category: 'Jewelry'},
+
+  // iPhones with color + storage variants
+  {id: 120, name: 'iPhone 16 Pro Max', basePrice: 2200000, image: 'https://i.dummyjson.com/data/products/70/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Titanium Black', storage: '512GB', price: 2200000},
+      {color: 'Titanium White', storage: '512GB', price: 2200000},
+      {color: 'Titanium Black', storage: '1TB', price: 2500000}
+    ]},
+  {id: 121, name: 'iPhone 16 Pro', basePrice: 1800000, image: 'https://i.dummyjson.com/data/products/71/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Titanium Black', storage: '256GB', price: 1800000},
+      {color: 'Titanium White', storage: '256GB', price: 1800000},
+      {color: 'Titanium Black', storage: '512GB', price: 2100000}
+    ]},
+  {id: 122, name: 'iPhone 15', basePrice: 1100000, image: 'https://i.dummyjson.com/data/products/72/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Black', storage: '128GB', price: 1100000},
+      {color: 'Blue', storage: '128GB', price: 1100000},
+      {color: 'Black', storage: '256GB', price: 1400000}
+    ]},
+  {id: 123, name: 'iPhone 14', basePrice: 950000, image: 'https://i.dummyjson.com/data/products/73/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Midnight', storage: '128GB', price: 950000},
+      {color: 'Starlight', storage: '128GB', price: 950000}
+    ]},
+
+  // Samsung Phones
+  {id: 124, name: 'Samsung Galaxy S25 Ultra', basePrice: 2100000, image: 'https://i.dummyjson.com/data/products/74/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Titanium Black', storage: '512GB', price: 2100000},
+      {color: 'Titanium Gray', storage: '1TB', price: 2500000}
+    ]},
+  {id: 125, name: 'Samsung Galaxy S24', basePrice: 1400000, image: 'https://i.dummyjson.com/data/products/75/thumbnail.jpg', category: 'Phones',
+    variants: [
+      {color: 'Onyx Black', storage: '256GB', price: 1400000},
+      {color: 'Marble Gray', storage: '256GB', price: 1400000}
+    ]},
+  {id: 126, name: 'Samsung Galaxy A55', price: 450000, image: 'https://i.dummyjson.com/data/products/76/thumbnail.jpg', category: 'Phones'},
+  {id: 127, name: 'Samsung Galaxy Z Fold 6', price: 2800000, image: 'https://i.dummyjson.com/data/products/77/thumbnail.jpg', category: 'Phones'},
+
+  // Android Phones
+  {id: 128, name: 'Google Pixel 9 Pro', price: 1300000, image: 'https://i.dummyjson.com/data/products/78/thumbnail.jpg', category: 'Phones'},
+  {id: 129, name: 'OnePlus 12', price: 950000, image: 'https://i.dummyjson.com/data/products/79/thumbnail.jpg', category: 'Phones'},
+  {id: 130, name: 'Tecno Phantom V Fold', price: 650000, image: 'https://i.dummyjson.com/data/products/80/thumbnail.jpg', category: 'Phones'},
+  {id: 131, name: 'Infinix Zero 40 5G', price: 320000, image: 'https://i.dummyjson.com/data/products/81/thumbnail.jpg', category: 'Phones'},
+
+  // Laptops
+  {id: 132, name: 'MacBook Pro M4 512GB', price: 3500000, image: 'https://i.dummyjson.com/data/products/82/thumbnail.jpg', category: 'Laptops'},
+  {id: 133, name: 'HP Pavilion 15 Intel i7', price: 850000, image: 'https://i.dummyjson.com/data/products/83/thumbnail.jpg', category: 'Laptops'},
+  {id: 134, name: 'Dell XPS 13', price: 1200000, image: 'https://i.dummyjson.com/data/products/84/thumbnail.jpg', category: 'Laptops'},
+  {id: 135, name: 'Lenovo ThinkPad T14', price: 900000, image: 'https://i.dummyjson.com/data/products/85/thumbnail.jpg', category: 'Laptops'},
+
+  // Electronics
+  {id: 136, name: 'AirPods Pro 2nd Gen', price: 180000, image: 'https://i.dummyjson.com/data/products/86/thumbnail.jpg', category: 'Electronics'},
+  {id: 137, name: 'Bluetooth Headphones Sony', price: 95000, image: 'https://i.dummyjson.com/data/products/87/thumbnail.jpg', category: 'Electronics'},
+  {id: 138, name: 'Smart LED Bulb RGB', price: 8000, image: 'https://i.dummyjson.com/data/products/88/thumbnail.jpg', category: 'Electronics'},
+  {id: 139, name: 'Power Bank 20000mAh Fast Charge', price: 15000, image: 'https://i.dummyjson.com/data/products/89/thumbnail.jpg', category: 'Electronics'},
+  {id: 140, name: 'Portable Bluetooth Speaker', price: 25000, image: 'https://i.dummyjson.com/data/products/90/thumbnail.jpg', category: 'Electronics'}
+]; 
 
 function updateAuthLinks(){
 const auth=document.getElementById('authLinks');
