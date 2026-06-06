@@ -312,29 +312,34 @@ showHome();
 
 function displayProducts(list=products){
   const grid=document.getElementById('products');
-  grid.innerHTML=list.map(p=>{
-    let basePrice = p.basePrice || p.price;
-    let img = p.image || p.img;
+  try{
+    grid.innerHTML=list.map(p=>{
+      let basePrice = p.basePrice || p.price || 0;
+      let img = p.image || p.img || '';
+      
+      let variantHTML = '';
+      if(p.variants && p.variants.length){
+        variantHTML = `<select id="variant${p.id}" onchange="updatePrice(${p.id})" style="margin:5px 0;width:100%;padding:5px">`;
+        p.variants.forEach((v,i)=>{
+          let label = v.size || v.color || v.storage || 'Default';
+          variantHTML += `<option value="${i}">${label} - N${v.price.toLocaleString()}</option>`;
+        });
+        variantHTML += `</select>`;
+      }
 
-    let variantHTML = '';
-    if(p.variants){
-      variantHTML = `<select id="variant${p.id}" onchange="updatePrice(${p.id})" style="margin:5px 0;width:100%;padding:5px">`;
-      p.variants.forEach((v,i)=>{
-        let label = v.size || v.color || v.storage || 'Default';
-        variantHTML += `<option value="${i}">${label} - N${v.price.toLocaleString()}</option>`;
-      });
-      variantHTML += `</select>`;
-    }
-
-    return `
-    <div class="product-card">
-      <img src="${img}" alt="${p.name}">
-      <h3>${p.name}</h3>
-      <p id="price${p.id}" style="color:gold">N${basePrice.toLocaleString()}</p>
-      ${variantHTML}
-      <button onclick="addToCart(${p.id})" style="background:lime;color:black;border:none;padding:8px;width:100%;margin-top:5px">Add to Cart</button>
-    </div>`;
-  }).join('');
+      return `
+      <div class="product-card">
+        <img src="${img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/200'">
+        <h3>${p.name}</h3>
+        <p id="price${p.id}" style="color:gold">N${basePrice.toLocaleString()}</p>
+        ${variantHTML}
+        <button onclick="addToCart(${p.id})" style="background:lime;color:black;border:none;padding:8px;width:100%;margin-top:5px">Add to Cart</button>
+      </div>`;
+    }).join('');
+  }catch(e){
+    grid.innerHTML=`<p style="color:red">Error loading products: ${e.message}</p>`;
+    console.log(e);
+  }
 }
 
 function addReview(id){
@@ -688,7 +693,7 @@ displayOrders();
 updateAuthLinks();
 updateCart();
 updateWishCount();
-displayProducts(products.slice(0,4));
+displayProducts(products);
 </script>
 <style>
 .whatsapp-float{
